@@ -636,7 +636,7 @@ void render_dungeon(dungeon_t *d)
     for (p[dim_y] = 0; p[dim_y] < DUNGEON_Y; p[dim_y]++) {
         for (p[dim_x] = 0; p[dim_x] < DUNGEON_X; p[dim_x]++) {
             if(d->foggon) {
-                if (charpair(p)!= ter_wall && visiblemappair(p)!= ter_wall && charpair(p) != d->pc.position) {//check if we can see when tunneling
+                if (charpair(p)!= ter_wall && visiblemappair(p)!= ter_wall ) {//&& charpair(p) != d->pc.position//check if we can see when tunneling
                     putchar(charpair(p)->symbol);
                 }
                 else {
