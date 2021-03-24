@@ -56,7 +56,7 @@ void io_queue_message(const char *format, ...)
   io_message_t *tmp;
   va_list ap;
 
-  if (!(tmp = malloc(sizeof (*tmp)))) {
+  if (!(tmp = (io_message_t*)malloc(sizeof (*tmp)))) {
     perror("malloc");
     exit(1);
   }
@@ -158,8 +158,8 @@ void io_display_hardness(dungeon_t *d)
 
 static int compare_monster_distance(const void *v1, const void *v2)
 {
-  const character_t *const *c1 = v1;
-  const character_t *const *c2 = v2;
+  const character_t *const *c1 = (const character_t* const*) v1;
+  const character_t *const *c2 = (const character_t* const*)v2;
 
   return (dungeon->pc_distance[(*c1)->position[dim_y]][(*c1)->position[dim_x]] -
           dungeon->pc_distance[(*c2)->position[dim_y]][(*c2)->position[dim_x]]);
@@ -170,7 +170,7 @@ static character_t *io_nearest_visible_monster(dungeon_t *d)
   character_t **c, *n;
   uint32_t x, y, count, i;
 
-  c = malloc(d->num_monsters * sizeof (*c));
+  c = (character_t**)malloc(d->num_monsters * sizeof (*c));
 
   /* Get a linear list of monsters */
   for (count = 0, y = 1; y < DUNGEON_Y - 1; y++) {
@@ -199,72 +199,116 @@ static character_t *io_nearest_visible_monster(dungeon_t *d)
 
 void io_display(dungeon_t *d)
 {
-  uint32_t y, x;
-  character_t *c;
+    uint32_t y, x;
+    character_t *c;
 
-  clear();
-  for (y = 0; y < 21; y++) {
-    for (x = 0; x < 80; x++) {
-      if (d->character[y][x]) {
-        mvaddch(y + 1, x, d->character[y][x]->symbol);
-      } else {
-        switch (mapxy(x, y)) {
-        case ter_wall:
-        case ter_wall_immutable:
-          mvaddch(y + 1, x, ' ');
-          break;
-        case ter_floor:
-        case ter_floor_room:
-          mvaddch(y + 1, x, '.');
-          break;
-        case ter_floor_hall:
-          mvaddch(y + 1, x, '#');
-          break;
-        case ter_debug:
-          mvaddch(y + 1, x, '*');
-          break;
-        case ter_stairs_up:
-          mvaddch(y + 1, x, '<');
-          break;
-        case ter_stairs_down:
-          mvaddch(y + 1, x, '>');
-          break;
-        default:
- /* Use zero as an error symbol, since it stands out somewhat, and it's *
-  * not otherwise used.                                                 */
-          mvaddch(y + 1, x, '0');
+    clear();
+    for (y = 0; y < 21; y++) {
+        for (x = 0; x < 80; x++) {
+            if(d->foggon){
+                if (d->cursor.waiting && d->cursor.position[dim_x] == x && d->cursor.position[dim_y]==y) {
+                    mvaddch(y + 1, x, '*');
+                }
+                else if ((d->character[y][x] && visiblemapxy(x, y) != ter_wall) || (d->character[y][x]->pc)) {
+                    mvaddch(y + 1, x, d->character[y][x]->symbol);
+                }
+                 else {
+                    switch (visiblemapxy(x, y)) {
+                        case ter_wall:
+                        case ter_wall_immutable:
+                            mvaddch(y + 1, x, ' ');
+                            break;
+                        case ter_floor:
+                        case ter_floor_room:
+                            mvaddch(y + 1, x, '.');
+                            break;
+                        case ter_floor_hall:
+                            mvaddch(y + 1, x, '#');
+                            break;
+                        case ter_debug:
+                            mvaddch(y + 1, x, '*');
+                            break;
+                        case ter_stairs_up:
+                            mvaddch(y + 1, x, '<');
+                            break;
+                        case ter_stairs_down:
+                            mvaddch(y + 1, x, '>');
+                            break;
+                        default:
+                            /* Use zero as an error symbol, since it stands out somewhat, and it's *
+                             * not otherwise used.                                                 */
+                            mvaddch(y + 1, x, '0');
+                    }
+                }
+            }
+            else{
+
+                if (d->cursor.waiting && d->cursor.position[dim_x] == x && d->cursor.position[dim_y]==y) {
+                    mvaddch(y + 1, x, '*');
+                }
+                else if (d->character[y][x]) {
+                    mvaddch(y + 1, x, d->character[y][x]->symbol);
+                } else {
+                    switch (mapxy(x, y)) {
+                        case ter_wall:
+                        case ter_wall_immutable:
+                            mvaddch(y + 1, x, ' ');
+                            break;
+                        case ter_floor:
+                        case ter_floor_room:
+                            mvaddch(y + 1, x, '.');
+                            break;
+                        case ter_floor_hall:
+                            mvaddch(y + 1, x, '#');
+                            break;
+                        case ter_debug:
+                            mvaddch(y + 1, x, '*');
+                            break;
+                        case ter_stairs_up:
+                            mvaddch(y + 1, x, '<');
+                            break;
+                        case ter_stairs_down:
+                            mvaddch(y + 1, x, '>');
+                            break;
+                        default:
+                            /* Use zero as an error symbol, since it stands out somewhat, and it's *
+                             * not otherwise used.                                                 */
+                            mvaddch(y + 1, x, '0');
+                    }
+                }
+            }
+
         }
-      }
     }
-  }
 
-  mvprintw(23, 1, "PC position is (%2d,%2d).",
-           d->pc.position[dim_x], d->pc.position[dim_y]);
-  mvprintw(22, 1, "%d known %s.", d->num_monsters,
-           d->num_monsters > 1 ? "monsters" : "monster");
-  mvprintw(22, 30, "Nearest visible monster: ");
-  if ((c = io_nearest_visible_monster(d))) {
-    attron(COLOR_PAIR(COLOR_RED));
-    mvprintw(22, 55, "%c at %d %c by %d %c.",
-             c->symbol,
-             abs(c->position[dim_y] - d->pc.position[dim_y]),
-             ((c->position[dim_y] - d->pc.position[dim_y]) <= 0 ?
-              'N' : 'S'),
-             abs(c->position[dim_x] - d->pc.position[dim_x]),
-             ((c->position[dim_x] - d->pc.position[dim_x]) <= 0 ?
-              'W' : 'E'));
-    attroff(COLOR_PAIR(COLOR_RED));
-  } else {
-    attron(COLOR_PAIR(COLOR_BLUE));
-    mvprintw(22, 55, "NONE.");
-    attroff(COLOR_PAIR(COLOR_BLUE));
-  }
-           
+    mvprintw(23, 1, "PC position is (%2d,%2d).",
+             d->pc.position[dim_x], d->pc.position[dim_y]);
+    mvprintw(22, 1, "%d known %s.", d->num_monsters,
+             d->num_monsters > 1 ? "monsters" : "monster");
+    mvprintw(22, 30, "Nearest visible monster: ");
+    if ((c = io_nearest_visible_monster(d))) {
+        attron(COLOR_PAIR(COLOR_RED));
+        mvprintw(22, 55, "%c at %d %c by %d %c.",
+                 c->symbol,
+                 abs(c->position[dim_y] - d->pc.position[dim_y]),
+                 ((c->position[dim_y] - d->pc.position[dim_y]) <= 0 ?
+                  'N' : 'S'),
+                 abs(c->position[dim_x] - d->pc.position[dim_x]),
+                 ((c->position[dim_x] - d->pc.position[dim_x]) <= 0 ?
+                  'W' : 'E'));
+        attroff(COLOR_PAIR(COLOR_RED));
+    } else {
+        attron(COLOR_PAIR(COLOR_BLUE));
+        mvprintw(22, 55, "NONE.");
+        attroff(COLOR_PAIR(COLOR_BLUE));
+    }
 
-  io_print_message_queue(0, 0);
 
-  refresh();
+    io_print_message_queue(0, 0);
+
+    refresh();
 }
+
 
 void io_display_monster_list(dungeon_t *d)
 {
@@ -278,27 +322,86 @@ void io_display_monster_list(dungeon_t *d)
 uint32_t io_teleport_pc(dungeon_t *d)
 {
   /* Just for fun. */
-  pair_t dest;
 
-  do {
-    dest[dim_x] = rand_range(1, DUNGEON_X - 2);
-    dest[dim_y] = rand_range(1, DUNGEON_Y - 2);
-  } while (charpair(dest));
+    while (1) {
+        switch (getch()) {
+            case '7':
+            case 'y':
+            case KEY_HOME:
+                move_cursor(d, 7);
+                break;
+            case '8':
+            case 'k':
+            case KEY_UP:
+                move_cursor(d, 8);
+                break;
+            case '9':
+            case 'u':
+            case KEY_PPAGE:
+                move_cursor(d, 9);
+                break;
+            case '6':
+            case 'l':
+            case KEY_RIGHT:
+                move_cursor(d, 6);
+                break;
+            case '3':
+            case 'n':
+            case KEY_NPAGE:
+                move_cursor(d, 3);
+                break;
+            case '2':
+            case 'j':
+            case KEY_DOWN:
+                move_cursor(d, 2);
+                break;
+            case '1':
+            case 'b':
+            case KEY_END:
+                move_cursor(d, 1);
+                break;
+            case '4':
+            case 'h':
+            case KEY_LEFT:
+                move_cursor(d, 4);
+                break;
+            case '5':
+            case ' ':
+            case '.':
+            case KEY_B2:
+                break;
+            case'g':
+                d->cursor.waiting = 0;
+                move_character(d, &d->pc, d->cursor.position);
+                return 0;
+            case'r':
+                pair_t dest;
 
-  d->character[d->pc.position[dim_y]][d->pc.position[dim_x]] = NULL;
-  d->character[dest[dim_y]][dest[dim_x]] = &d->pc;
+                do {
+                    dest[dim_x] = rand_range(1, DUNGEON_X - 2);
+                    dest[dim_y] = rand_range(1, DUNGEON_Y - 2);
+                } while (charpair(dest));
 
-  d->pc.position[dim_y] = dest[dim_y];
-  d->pc.position[dim_x] = dest[dim_x];
+                d->character[d->pc.position[dim_y]][d->pc.position[dim_x]] = NULL;
+                d->character[dest[dim_y]][dest[dim_x]] = &d->pc;
+                d->cursor.waiting = 0;
+                d->pc.position[dim_y] = dest[dim_y];
+                d->pc.position[dim_x] = dest[dim_x];
 
-  if (mappair(dest) < ter_floor) {
-    mappair(dest) = ter_floor;
-  }
+                if (mappair(dest) < ter_floor) {
+                    mappair(dest) = ter_floor;
+                }
 
-  dijkstra(d);
-  dijkstra_tunnel(d);
+                dijkstra(d);
+                dijkstra_tunnel(d);
 
-  return 0;
+                return 0;
+
+        }
+
+    }
+
+
 }
 /* Adjectives to describe our monsters */
 static const char *adjectives[] = {
@@ -370,7 +473,7 @@ static void io_list_monsters_display(dungeon_t *d,
   uint32_t i;
   char (*s)[40]; /* pointer to array of 40 char */
 
-  s = malloc(count * sizeof (*s));
+  s = (char(*)[40])malloc(count * sizeof (*s));
 
   mvprintw(3, 19, " %-40s ", "");
   /* Borrow the first element of our array for this string: */
@@ -417,7 +520,7 @@ static void io_list_monsters(dungeon_t *d)
   character_t **c;
   uint32_t x, y, count;
 
-  c = malloc(d->num_monsters * sizeof (*c));
+  c = (character_t**)malloc(d->num_monsters * sizeof (*c));
 
   /* Get a linear list of monsters */
   for (count = 0, y = 1; y < DUNGEON_Y - 1; y++) {
@@ -446,7 +549,6 @@ void io_handle_input(dungeon_t *d)
   int key;
 
   do {
-
     switch (key = getch()) {
     case '7':
     case 'y':
@@ -505,13 +607,17 @@ void io_handle_input(dungeon_t *d)
       fail_code = 0;
       break;
     case 'f' :
-        if(d->foggon){
-            d->foggon = 0;
-        }
-        else{
-            d->foggon = 1;
-        }
-        break;
+
+       if(d->foggon){
+          d->foggon = 0;
+       }
+       else{
+           //printf("hello");
+          d->foggon = 1;
+       }
+       lookAround(d);
+       io_display(d);
+       break;
     case 'T':
       /* New command.  Display the distances for tunnelers.             */
       io_display_tunnel(d);
@@ -538,6 +644,7 @@ void io_handle_input(dungeon_t *d)
       break;
     case 'g':
       /* Teleport the PC to a random place in the dungeon.              */
+      d->cursor.waiting = 1;
       io_teleport_pc(d);
       fail_code = 0;
       break;

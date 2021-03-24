@@ -19,36 +19,36 @@ void do_combat(dungeon_t *d, character_t *atk, character_t *def)
 {
   int can_see_atk, can_see_def;
   char *organs[] = {
-    "liver",                   /*  0 */
-    "pancreas",                /*  1 */
-    "heart",                   /*  2 */
-    "eye",                     /*  3 */
-    "arm",                     /*  4 */
-    "leg",                     /*  5 */
-    "intestines",              /*  6 */
-    "gall bladder",            /*  7 */
-    "lungs",                   /*  8 */
-    "hand",                    /*  9 */
-    "foot",                    /* 10 */
-    "spinal cord",             /* 11 */
-    "pituitary gland",         /* 12 */
-    "thyroid",                 /* 13 */
-    "tongue",                  /* 14 */
-    "bladder",                 /* 15 */
-    "diaphram",                /* 16 */
-    "stomach",                 /* 17 */
-    "pharynx",                 /* 18 */
-    "esophagus",               /* 19 */
-    "trachea",                 /* 20 */
-    "urethra",                 /* 21 */
-    "spleen",                  /* 22 */
-    "ganglia",                 /* 23 */
-    "ear",                     /* 24 */
-    "subcutaneous tissue"      /* 25 */
-    "cerebellum",              /* 26 */ /* Brain parts begin here */
-    "hippocampus",             /* 27 */
-    "frontal lobe",            /* 28 */
-    "brain",                   /* 29 */
+          (char*)"liver",                   /*  0 */
+          (char*)"pancreas",                /*  1 */
+          (char*)"heart",                   /*  2 */
+          (char*)"eye",                     /*  3 */
+          (char*)"arm",                     /*  4 */
+          (char*)"leg",                     /*  5 */
+          (char*)"intestines",              /*  6 */
+          (char*)"gall bladder",            /*  7 */
+          (char*)"lungs",                   /*  8 */
+          (char*)"hand",                    /*  9 */
+          (char*)"foot",                    /* 10 */
+          (char*)"spinal cord",             /* 11 */
+          (char*)"pituitary gland",         /* 12 */
+          (char*)"thyroid",                 /* 13 */
+          (char*)"tongue",                  /* 14 */
+          (char*)"bladder",                 /* 15 */
+          (char*)"diaphram",                /* 16 */
+          (char*)"stomach",                 /* 17 */
+          (char*)"pharynx",                 /* 18 */
+          (char*)"esophagus",               /* 19 */
+          (char*)"trachea",                 /* 20 */
+          (char*)"urethra",                 /* 21 */
+          (char*)"spleen",                  /* 22 */
+          (char*)"ganglia",                 /* 23 */
+          (char*)"ear",                     /* 24 */
+          (char*)"subcutaneous tissue",      /* 25 */
+          (char*)"cerebellum",              /* 26 */ /* Brain parts begin here */
+          (char*)"hippocampus",             /* 27 */
+          (char*)"frontal lobe",            /* 28 */
+          (char*)"brain",                   /* 29 */
   };
   int part;
 
@@ -117,68 +117,68 @@ void move_character(dungeon_t *d, character_t *c, pair_t next)
 
 void do_moves(dungeon_t *d)
 {
-  pair_t next;
-  character_t *c;
-  event_t *e;
+    pair_t next;
+    character_t *c;
+    event_t *e;
 
-  /* Remove the PC when it is PC turn.  Replace on next call.  This allows *
-   * use to completely uninit the heap when generating a new level without *
-   * worrying about deleting the PC.                                       */
+    /* Remove the PC when it is PC turn.  Replace on next call.  This allows *
+     * use to completely uninit the heap when generating a new level without *
+     * worrying about deleting the PC.                                       */
 
-  if (pc_is_alive(d)) {
-    /* The PC always goes first one a tie, so we don't use new_event().  *
-     * We generate one manually so that we can set the PC sequence       *
-     * number to zero.                                                   */
-    e = malloc(sizeof (*e));
-    e->type = event_character_turn;
-    /* Hack: New dungeons are marked.  Unmark and ensure PC goes at d->time, *
-     * otherwise, monsters get a turn before the PC.                         */
-    if (d->is_new) {
-      d->is_new = 0;
-      e->time = d->time;
-    } else {
-      e->time = d->time + (1000 / d->pc.speed);
+    if (pc_is_alive(d)) {
+        /* The PC always goes first one a tie, so we don't use new_event().  *
+         * We generate one manually so that we can set the PC sequence       *
+         * number to zero.                                                   */
+        e = (event_t*)malloc(sizeof (*e));
+        e->type = event_character_turn;
+        /* Hack: New dungeons are marked.  Unmark and ensure PC goes at d->time, *
+         * otherwise, monsters get a turn before the PC.                         */
+        if (d->is_new) {
+            d->is_new = 0;
+            e->time = d->time;
+        } else {
+            e->time = d->time + (1000 / d->pc.speed);
+        }
+        e->sequence = 0;
+        e->c = &d->pc;
+        heap_insert(&d->events, e);
     }
-    e->sequence = 0;
-    e->c = &d->pc;
-    heap_insert(&d->events, e);
-  }
 
-  while (pc_is_alive(d) &&
-         (e = heap_remove_min(&d->events)) &&
-         ((e->type != event_character_turn) || (e->c != &d->pc))) {
-    d->time = e->time;
-    if (e->type == event_character_turn) {
-      c = e->c;
+    while (pc_is_alive(d) &&
+           (e = (event_t*)heap_remove_min(&d->events)) &&
+           ((e->type != event_character_turn) || (e->c != &d->pc))) {
+        d->time = e->time;
+        if (e->type == event_character_turn) {
+            c = e->c;
+        }
+        if (!c->alive) {
+            if (d->character[c->position[dim_y]][c->position[dim_x]] == c) {
+                d->character[c->position[dim_y]][c->position[dim_x]] = NULL;
+            }
+            if (c != &d->pc) {
+                event_delete(e);
+            }
+            continue;
+        }
+
+        npc_next_pos(d, c, next);
+        move_character(d, c, next);
+        lookAround(d);
+
+        heap_insert(&d->events, update_event(d, e, 1000 / c->speed));
     }
-    if (!c->alive) {
-      if (d->character[c->position[dim_y]][c->position[dim_x]] == c) {
-        d->character[c->position[dim_y]][c->position[dim_x]] = NULL;
-      }
-      if (c != &d->pc) {
+
+    io_display(d);
+    if (pc_is_alive(d) && e->c == &d->pc) {
+        c = e->c;
+        d->time = e->time;
+        /* Kind of kludgey, but because the PC is never in the queue when   *
+         * we are outside of this function, the PC event has to get deleted *
+         * and recreated every time we leave and re-enter this function.    */
+        e->c = NULL;
         event_delete(e);
-      }
-      continue;
+        io_handle_input(d);
     }
-
-    npc_next_pos(d, c, next);
-    move_character(d, c, next);
-    lookAround(d);
-
-    heap_insert(&d->events, update_event(d, e, 1000 / c->speed));
-  }
-
-  io_display(d);
-  if (pc_is_alive(d) && e->c == &d->pc) {
-    c = e->c;
-    d->time = e->time;
-    /* Kind of kludgey, but because the PC is never in the queue when   *
-     * we are outside of this function, the PC event has to get deleted *
-     * and recreated every time we leave and re-enter this function.    */
-    e->c = NULL;
-    event_delete(e);
-    io_handle_input(d);
-  }
 }
 
 void dir_nearest_wall(dungeon_t *d, character_t *c, pair_t dir)
@@ -238,19 +238,85 @@ static void new_dungeon_level(dungeon_t *d, uint32_t dir)
   }
 }
 
+uint32_t move_cursor(dungeon_t *d, uint32_t dir)
+{
+    pair_t next;
+    //uint32_t was_stairs = 0;
+    char *wallmsg[] = {
+            (char*)"There's a wall in the way.",
+            (char*)"BUMP!",
+            (char*)"Ouch!",
+            (char*)"You stub your toe.",
+            (char*)"You can't go that way.",
+            (char*)"You admire the engravings.",
+            (char*)"Are you drunk?"
+    };
 
+    next[dim_y] = d->pc.position[dim_y];
+    next[dim_x] = d->pc.position[dim_x];
+
+
+    switch (dir) {
+        case 1:
+        case 2:
+        case 3:
+            next[dim_y]++;
+            break;
+        case 4:
+        case 5:
+        case 6:
+            break;
+        case 7:
+        case 8:
+        case 9:
+            next[dim_y]--;
+            break;
+    }
+    switch (dir) {
+        case 1:
+        case 4:
+        case 7:
+            next[dim_x]--;
+            break;
+        case 2:
+        case 5:
+        case 8:
+            break;
+        case 3:
+        case 6:
+        case 9:
+            next[dim_x]++;
+            break;
+    }
+
+
+    if ((dir != '>') && (dir != '<') && (mappair(next) >= ter_floor)) {
+
+        d->cursor.position[dim_y] = next[dim_y];
+        d->cursor.position[dim_x] = next[dim_x];
+        io_display(d);
+
+        return 0;
+    } else if (mappair(next) == ter_wall_immutable) {
+        io_queue_message(wallmsg[rand() % (sizeof (wallmsg) /
+                                           sizeof (wallmsg[0]))]);
+        io_display(d);
+    }
+
+    return 1;
+}
 uint32_t move_pc(dungeon_t *d, uint32_t dir)
 {
   pair_t next;
   uint32_t was_stairs = 0;
   char *wallmsg[] = {
-    "There's a wall in the way.",
-    "BUMP!",
-    "Ouch!",
-    "You stub your toe.",
-    "You can't go that way.",
-    "You admire the engravings.",
-    "Are you drunk?"
+          (char*)"There's a wall in the way.",
+          (char*)"BUMP!",
+          (char*)"Ouch!",
+          (char*)"You stub your toe.",
+          (char*)"You can't go that way.",
+          (char*)"You admire the engravings.",
+          (char*)"Are you drunk?"
   };
 
   next[dim_y] = d->pc.position[dim_y];
