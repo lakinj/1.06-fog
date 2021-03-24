@@ -5,7 +5,7 @@
 
 # include "dims.h"
 
-typedef struct dungeon_t dungeon_t;
+typedef struct dungeon dungeon_t;
 typedef struct npc npc_t;
 typedef struct pc pc_t;
 typedef struct dice_t dice_t;

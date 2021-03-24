@@ -52,7 +52,7 @@ typedef struct cursor{
     pair_t position;
     uint32_t waiting;
 }cursor_t;
-class dungeon {
+class dungeon{
 public:
     uint32_t num_rooms;
     room_t *rooms;
@@ -86,7 +86,7 @@ public:
     uint32_t foggon;
     cursor_t cursor;
 };
-
+typedef struct dungeon dungeon_t;
 void init_dungeon(dungeon_t *d);
 void new_dungeon(dungeon_t *d);
 void delete_dungeon(dungeon_t *d);
