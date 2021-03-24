@@ -373,7 +373,7 @@ static int smooth_hardness(dungeon_t *d)
     if (i == 1) {
       head = tail = (queue_node_t*) malloc(sizeof (*tail));
     } else {
-      tail->next = (queue_node_t*)malloc(sizeof (*tail));
+      tail->next = (queue_node_t*) malloc(sizeof (*tail));
       tail = tail->next;
     }
     tail->next = NULL;
@@ -636,7 +636,8 @@ void render_dungeon(dungeon_t *d)
     for (p[dim_y] = 0; p[dim_y] < DUNGEON_Y; p[dim_y]++) {
         for (p[dim_x] = 0; p[dim_x] < DUNGEON_X; p[dim_x]++) {
             if(d->foggon) {
-                if (charpair(p)!= ter_wall && visiblemappair(p)!= ter_wall ) {//&& charpair(p) != d->pc.position//check if we can see when tunneling
+                printf("fog is on\n");
+                if (visiblemappair(p)!= ter_wall && charpair(p)) {//&& charpair(p) != d->pc.position check if we can see when tunneling
                     putchar(charpair(p)->symbol);
                 }
                 else {
@@ -1288,16 +1289,17 @@ void render_tunnel_distance_map(dungeon_t *d)
   }
 }
 void lookAround(dungeon_t *d){
-    d->visiblemap[d->pc.position[dim_y]][d->pc.position[dim_x+1]] = d->map[d->pc.position[dim_y]][d->pc.position[dim_x+1]];
-    d->visiblemap[d->pc.position[dim_y]][d->pc.position[dim_x-1]] = d->map[d->pc.position[dim_y]][d->pc.position[dim_x-1]];
-    d->visiblemap[d->pc.position[dim_y-1]][d->pc.position[dim_x+1]] = d->map[d->pc.position[dim_y-1]][d->pc.position[dim_x+1]];
-    d->visiblemap[d->pc.position[dim_y-1]][d->pc.position[dim_x-1]] = d->map[d->pc.position[dim_y-1]][d->pc.position[dim_x-1]];
-    d->visiblemap[d->pc.position[dim_y-1]][d->pc.position[dim_x]] = d->map[d->pc.position[dim_y-1]][d->pc.position[dim_x]];
-    d->visiblemap[d->pc.position[dim_y+1]][d->pc.position[dim_x+1]] = d->map[d->pc.position[dim_y+1]][d->pc.position[dim_x+1]];
-    d->visiblemap[d->pc.position[dim_y+1]][d->pc.position[dim_x-1]] = d->map[d->pc.position[dim_y+1]][d->pc.position[dim_x-1]];
-    d->visiblemap[d->pc.position[dim_y+1]][d->pc.position[dim_x]] = d->map[d->pc.position[dim_y+1]][d->pc.position[dim_x]];
-
+    d->visiblemap[d->pc.position[dim_y]][d->pc.position[dim_x]+1] = d->map[d->pc.position[dim_y]][d->pc.position[dim_x]+1];
+    d->visiblemap[d->pc.position[dim_y]][d->pc.position[dim_x]-1] = d->map[d->pc.position[dim_y]][d->pc.position[dim_x]-1];
+    d->visiblemap[d->pc.position[dim_y]-1][d->pc.position[dim_x]+1] = d->map[d->pc.position[dim_y]-1][d->pc.position[dim_x]+1];
+    d->visiblemap[d->pc.position[dim_y]-1][d->pc.position[dim_x]-1] = d->map[d->pc.position[dim_y]-1][d->pc.position[dim_x]-1];
+    d->visiblemap[d->pc.position[dim_y]-1][d->pc.position[dim_x]] = d->map[d->pc.position[dim_y]-1][d->pc.position[dim_x]];
+    d->visiblemap[d->pc.position[dim_y]+1][d->pc.position[dim_x]+1] = d->map[d->pc.position[dim_y]+1][d->pc.position[dim_x]+1];
+    d->visiblemap[d->pc.position[dim_y]+1][d->pc.position[dim_x]-1] = d->map[d->pc.position[dim_y]+1][d->pc.position[dim_x]-1];
+    d->visiblemap[d->pc.position[dim_y]+1][d->pc.position[dim_x]] = d->map[d->pc.position[dim_y]+1][d->pc.position[dim_x]];
+    d->visiblemap[d->pc.position[dim_y]][d->pc.position[dim_x]] = d->map[d->pc.position[dim_y]][d->pc.position[dim_x]];
 }
+
 void new_dungeon(dungeon_t *d)
 {
   uint32_t sequence_number;
