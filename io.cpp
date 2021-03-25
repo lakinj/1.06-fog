@@ -206,10 +206,10 @@ void io_display(dungeon_t *d)
     for (y = 0; y < 21; y++) {
         for (x = 0; x < 80; x++) {
             if(d->foggon){
-                if (d->cursor.waiting && d->cursor.position[dim_x] == x && d->cursor.position[dim_y]==y) {
+                if (d->cursor.waiting && (uint32_t)d->cursor.position[dim_x] == x && (uint32_t)d->cursor.position[dim_y]==y) {
                     mvaddch(y + 1, x, '*');
                 }
-                else if ((d->character[y][x] && visiblemapxy(x, y) != ter_wall) || (d->character[y][x]->pc)) {
+                else if ((d->character[y][x] && visiblemapxy(x, y) != ter_wall)) {
                     mvaddch(y + 1, x, d->character[y][x]->symbol);
                 }
                  else {
@@ -242,13 +242,13 @@ void io_display(dungeon_t *d)
                 }
             }
             else{
-
-                if (d->cursor.waiting && d->cursor.position[dim_x] == x && d->cursor.position[dim_y]==y) {
+                if (d->cursor.waiting && (uint32_t)d->cursor.position[dim_x] == x && (uint32_t)d->cursor.position[dim_y]==y) {
                     mvaddch(y + 1, x, '*');
                 }
                 else if (d->character[y][x]) {
                     mvaddch(y + 1, x, d->character[y][x]->symbol);
-                } else {
+                }
+                else {
                     switch (mapxy(x, y)) {
                         case ter_wall:
                         case ter_wall_immutable:
@@ -319,9 +319,34 @@ void io_display_monster_list(dungeon_t *d)
   getch();
 }
 
-uint32_t io_teleport_pc(dungeon_t *d)
+uint32_t io_teleport_pcRANDOM(dungeon_t *d)
 {
   /* Just for fun. */
+  pair_t dest;
+
+  do {
+    dest[dim_x] = rand_range(1, DUNGEON_X - 2);
+    dest[dim_y] = rand_range(1, DUNGEON_Y - 2);
+  } while (charpair(dest));
+
+  d->character[d->pc.position[dim_y]][d->pc.position[dim_x]] = NULL;
+  d->character[dest[dim_y]][dest[dim_x]] = &d->pc;
+
+  d->pc.position[dim_y] = dest[dim_y];
+  d->pc.position[dim_x] = dest[dim_x];
+
+  if (mappair(dest) < ter_floor) {
+    mappair(dest) = ter_floor;
+  }
+
+  dijkstra(d);
+  dijkstra_tunnel(d);
+
+  return 0;
+}
+uint32_t io_teleport_pc(dungeon_t *d)
+{
+    /* intentional teleportation */
 
     while (1) {
         switch (getch()) {
@@ -610,10 +635,12 @@ void io_handle_input(dungeon_t *d)
 
        if(d->foggon){
           d->foggon = 0;
+         // fail_code = 0;
        }
        else{
            //printf("hello");
           d->foggon = 1;
+         // fail_code =1;
        }
        lookAround(d);
        io_display(d);
@@ -644,9 +671,11 @@ void io_handle_input(dungeon_t *d)
       break;
     case 'g':
       /* Teleport the PC to a random place in the dungeon.              */
-      d->cursor.waiting = 1;
-      io_teleport_pc(d);
-      fail_code = 0;
+        d->cursor.waiting = 1;
+        d->cursor.position[dim_x] = d->pc.position[dim_x];
+        d->cursor.position[dim_y] = d->pc.position[dim_y];
+        io_teleport_pc(d);
+        fail_code = 0;
       break;
     case 'm':
       io_list_monsters(d);
