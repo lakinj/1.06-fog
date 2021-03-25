@@ -121,10 +121,10 @@ void movePC_withCursor(dungeon_t *d, character_t *c, pair_t next){
         do_combat(d, c, charpair(next));
     }
 
-        d->character[c->position[dim_y]][c->position[dim_x]] = NULL;
-        c->position[dim_y] = next[dim_y];
-        c->position[dim_x] = next[dim_x];
-        d->character[c->position[dim_y]][c->position[dim_x]] = c;
+    d->character[c->position[dim_y]][c->position[dim_x]] = NULL;
+    c->position[dim_y] = next[dim_y];
+    c->position[dim_x] = next[dim_x];
+    d->character[c->position[dim_y]][c->position[dim_x]] = c;
 }
 void do_moves(dungeon_t *d)
 {
