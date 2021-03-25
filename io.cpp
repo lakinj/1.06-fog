@@ -397,7 +397,7 @@ uint32_t io_teleport_pc(dungeon_t *d)
                 break;
             case'g':
                 d->cursor.waiting = 0;
-                move_character(d, &d->pc, d->cursor.position);
+                movePC_withCursor(d, &d->pc, d->cursor.position);
                 return 0;
             case'r':
                 pair_t dest;

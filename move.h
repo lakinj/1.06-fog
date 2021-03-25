@@ -19,5 +19,6 @@ uint32_t against_wall(dungeon_t *d, character_t *c);
 uint32_t move_pc(dungeon_t *d, uint32_t dir);
 void move_character(dungeon_t *d, character_t *c, pair_t next);
 uint32_t move_cursor(dungeon_t *d, uint32_t dir);
+void movePC_withCursor(dungeon_t *d, character_t *c, pair_t next)
 
 #endif
