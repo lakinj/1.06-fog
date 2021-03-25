@@ -290,7 +290,7 @@ uint32_t move_cursor(dungeon_t *d, uint32_t dir)
     }
 
 
-    if ((dir != '>') && (dir != '<') && (mappair(next) >= ter_floor)) {
+    if ((dir != '>') && (dir != '<') && ((mappair(next) >= ter_floor) || mappair(next)== ter_wall)) {
 
         d->cursor.position[dim_y] = next[dim_y];
         d->cursor.position[dim_x] = next[dim_x];
