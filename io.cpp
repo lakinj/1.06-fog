@@ -645,6 +645,8 @@ void io_handle_input(dungeon_t *d)
     case 'g':
       /* Teleport the PC to a random place in the dungeon.              */
       d->cursor.waiting = 1;
+      d->cursor.position[dim_x] = d->pc.position[dim_x];
+      d->cursor.position[dim_y] = d->pc.position[dim_y];
       io_teleport_pc(d);
       fail_code = 0;
       break;

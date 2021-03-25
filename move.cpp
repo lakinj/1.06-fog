@@ -252,8 +252,8 @@ uint32_t move_cursor(dungeon_t *d, uint32_t dir)
             (char*)"Are you drunk?"
     };
 
-    next[dim_y] = d->pc.position[dim_y];
-    next[dim_x] = d->pc.position[dim_x];
+    next[dim_y] = d->cursor.position[dim_y];
+    next[dim_x] = d->cursor.position[dim_x];
 
 
     switch (dir) {
